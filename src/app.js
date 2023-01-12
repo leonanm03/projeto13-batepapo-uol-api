@@ -11,7 +11,9 @@ dotenv.config();
 app.use(cors());
 app.use(express.json());
 
-const mongoClient = new MongoClient(process.env.MONGO_URI);
+const PORT = 5000; //server PORT
+
+const mongoClient = new MongoClient(process.env.DATABASE_URL);
 let db;
 
 try {
@@ -20,10 +22,12 @@ try {
   console.log("Erro no mongo.conect", err.message);
 }
 
-db = mongoClient.db("DIRETORIOOOO");
+app.get("/teste", (req, res) => {
+  console.log("entrei no get");
+  res.status(200).send("testando 123");
+});
+
+db = mongoClient.db();
 const talCollection = db.collection("COLLECTIONNNNN");
 
-// ROTAS:
-
-const port = 5000;
-app.listen(port, () => console.log(`Server running in port: ${port}`));
+app.listen(PORT, () => console.log(`Server running in PORT: ${PORT}`));
