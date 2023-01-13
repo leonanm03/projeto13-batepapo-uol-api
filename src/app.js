@@ -5,6 +5,7 @@ import cors from "cors";
 import joi from "joi";
 import bcrypt from "bcrypt";
 import { v4 as uuidV4 } from "uuid";
+import dayjs from "dayjs";
 
 const app = express();
 dotenv.config();
@@ -54,15 +55,22 @@ app.post("/participants", async (req, res) => {
   }
 
   const time = Date.now();
+  let timestamp = dayjs(time).format("HH:mm:ss");
 
-  collectionUsers
-    .insertOne({ name, lastStatus: time })
-    .then(() => {
-      return res.status(201).send("User registered!");
-    })
-    .catch(() => {
-      res.status(422).send("Register error!");
+  try {
+    await collectionUsers.insertOne({ name, lastStatus: time });
+    await collectionMsgs.insertOne({
+      from: name,
+      to: "Todos",
+      text: "entra na sala...",
+      type: "status",
+      time: timestamp,
     });
+
+    return res.status(201).send("User registered!");
+  } catch {
+    return res.status(422).send("Register error!");
+  }
 });
 
 app.listen(PORT, () => console.log(`Server running in PORT: ${PORT}`));
