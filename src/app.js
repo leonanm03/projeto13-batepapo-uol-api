@@ -15,7 +15,15 @@ app.use(express.json());
 const PORT = 5000; //server PORT
 
 const mongoClient = new MongoClient(process.env.DATABASE_URL);
-let db;
+try {
+  await mongoClient.connect();
+} catch (err) {
+  console.log("Erro no mongo.conect", err.message);
+}
+
+const db = mongoClient.db();
+const collectionUsers = db.collection("participants");
+const collectionMsgs = db.collection("messages");
 
 let messages = [
   {
@@ -26,16 +34,6 @@ let messages = [
     time: "20:04:37",
   },
 ];
-
-try {
-  await mongoClient.connect();
-} catch (err) {
-  console.log("Erro no mongo.conect", err.message);
-}
-
-db = mongoClient.db();
-const collectionUsers = db.collection("participants");
-const collectionMsgs = db.collection("messages");
 
 // Register user
 app.post("/participants", async (req, res) => {
@@ -73,4 +71,11 @@ app.post("/participants", async (req, res) => {
   }
 });
 
+// Get all users
+app.get("/participants", async (req, res) => {
+  const users = await collectionUsers.find().toArray();
+  return res.status(200).send(users);
+});
+
+// start server
 app.listen(PORT, () => console.log(`Server running in PORT: ${PORT}`));
