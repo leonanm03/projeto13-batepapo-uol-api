@@ -16,18 +16,36 @@ const PORT = 5000; //server PORT
 const mongoClient = new MongoClient(process.env.DATABASE_URL);
 let db;
 
+let messages = [
+  {
+    from: "João",
+    to: "Todos",
+    text: "oi galera",
+    type: "message",
+    time: "20:04:37",
+  },
+];
+
 try {
   await mongoClient.connect();
 } catch (err) {
   console.log("Erro no mongo.conect", err.message);
 }
 
-app.get("/teste", (req, res) => {
-  console.log("entrei no get");
-  res.status(200).send("testando 123");
-});
-
 db = mongoClient.db();
-const talCollection = db.collection("COLLECTIONNNNN");
+const collectionUsers = db.collection("participants");
+
+app.post("/participants", (req, res) => {
+  const { name } = req.body;
+
+  db.collection("participants")
+    .insertOne({ name })
+    .then(() => {
+      return res.status(201).send("User registered!");
+    })
+    .catch(() => {
+      res.status(422).send("Register error!");
+    });
+});
 
 app.listen(PORT, () => console.log(`Server running in PORT: ${PORT}`));
