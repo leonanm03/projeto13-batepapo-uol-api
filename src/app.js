@@ -53,8 +53,10 @@ app.post("/participants", async (req, res) => {
     return res.status(409).send("This username already exists!");
   }
 
+  const time = Date.now();
+
   collectionUsers
-    .insertOne({ name })
+    .insertOne({ name, lastStatus: time })
     .then(() => {
       return res.status(201).send("User registered!");
     })
