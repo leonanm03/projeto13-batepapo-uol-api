@@ -34,8 +34,10 @@ try {
 
 db = mongoClient.db();
 const collectionUsers = db.collection("participants");
+const collectionMsgs = db.collection("messages");
 
-app.post("/participants", (req, res) => {
+// Register user
+app.post("/participants", async (req, res) => {
   const { name } = req.body;
 
   const schema = joi.object({
@@ -46,7 +48,12 @@ app.post("/participants", (req, res) => {
     return res.status(400).send(error.details[0].message);
   }
 
-  db.collection("participants")
+  const existingUser = await collectionUsers.findOne({ name: name });
+  if (existingUser) {
+    return res.status(409).send("This username already exists!");
+  }
+
+  collectionUsers
     .insertOne({ name })
     .then(() => {
       return res.status(201).send("User registered!");
