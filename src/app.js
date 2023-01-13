@@ -108,5 +108,15 @@ app.post("/messages", async (req, res) => {
   }
 });
 
+// Get messages
+app.get("/messages", async (req, res) => {
+  try {
+    const messages = await collectionMsgs.find().toArray();
+    return res.status(200).send(messages);
+  } catch {
+    return res.status(422).send("Error getting messages!");
+  }
+});
+
 // start server
 app.listen(PORT, () => console.log(`Server running in PORT: ${PORT}`));
