@@ -53,7 +53,7 @@ app.post("/participants", async (req, res) => {
   }
 
   const time = Date.now();
-  let timestamp = dayjs(time).format("HH:mm:ss");
+  const timestamp = dayjs(time).format("HH:mm:ss");
 
   try {
     await collectionUsers.insertOne({ name, lastStatus: time });
@@ -75,6 +75,26 @@ app.post("/participants", async (req, res) => {
 app.get("/participants", async (req, res) => {
   const users = await collectionUsers.find().toArray();
   return res.status(200).send(users);
+});
+
+// Send message
+app.post("/messages", async (req, res) => {
+  const { to, text, type } = req.body;
+  const from = req.headers.user;
+
+  const timestamp = dayjs(Date.now()).format("HH:mm:ss");
+  try {
+    await collectionMsgs.insertOne({
+      from,
+      to,
+      text,
+      type,
+      time: timestamp,
+    });
+    return res.status(201).send("Message sent!");
+  } catch {
+    return res.status(422).send("Error sending message!");
+  }
 });
 
 // start server
