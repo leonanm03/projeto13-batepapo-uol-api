@@ -35,7 +35,7 @@ app.post("/participants", async (req, res) => {
   });
   const { error } = schema.validate({ name });
   if (error) {
-    return res.status(400).send(error.details[0].message);
+    return res.status(422).send(error.details[0].message);
   }
 
   const existingUser = await collectionUsers.findOne({ name: name });
@@ -110,8 +110,21 @@ app.post("/messages", async (req, res) => {
 
 // Get messages
 app.get("/messages", async (req, res) => {
+  let messages;
+  const user = req.headers.user;
+
   try {
-    const messages = await collectionMsgs.find().toArray();
+    messages = await collectionMsgs
+      .find({
+        // get only messages that user can see
+        $or: [
+          { to: user },
+          { from: user },
+          { to: "Todos" },
+          { type: "message" },
+        ],
+      })
+      .toArray();
     return res.status(200).send(messages);
   } catch {
     return res.status(422).send("Error getting messages!");
