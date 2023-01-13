@@ -38,6 +38,14 @@ const collectionUsers = db.collection("participants");
 app.post("/participants", (req, res) => {
   const { name } = req.body;
 
+  const schema = joi.object({
+    name: joi.string().min(1).required(),
+  });
+  const { error } = schema.validate({ name });
+  if (error) {
+    return res.status(400).send(error.details[0].message);
+  }
+
   db.collection("participants")
     .insertOne({ name })
     .then(() => {
