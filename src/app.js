@@ -112,6 +112,13 @@ app.post("/messages", async (req, res) => {
 app.get("/messages", async (req, res) => {
   let messages;
   const user = req.headers.user;
+  let limit = parseInt(req.query.limit);
+
+  if (!limit) {
+    limit = 100;
+  }
+
+  //limit validation
 
   try {
     messages = await collectionMsgs
@@ -125,7 +132,11 @@ app.get("/messages", async (req, res) => {
         ],
       })
       .toArray();
-    return res.status(200).send(messages);
+
+    // get only the last ${limit} messages reversed
+    const reverseMessages = messages.slice(-limit).reverse();
+
+    return res.status(200).send(reverseMessages);
   } catch {
     return res.status(422).send("Error getting messages!");
   }
