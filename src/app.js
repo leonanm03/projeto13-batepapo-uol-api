@@ -79,6 +79,12 @@ app.post("/messages", async (req, res) => {
   const { to, text, type } = req.body;
   const from = req.headers.user;
 
+  if (!from) return res.status(422).send("Missing user header!");
+
+  if (!to || !text || !type) {
+    return res.status(422).send("{to}, {text} and {type} are required!");
+  }
+
   const userExists = await collectionUsers.findOne({ name: from });
   if (!userExists) {
     return res.status(404).send("User not found!");
