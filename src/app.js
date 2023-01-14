@@ -29,6 +29,10 @@ const collectionMsgs = db.collection("messages");
 app.post("/participants", async (req, res) => {
   const { name } = req.body;
 
+  if (!name) {
+    return res.status(422).send("{name} is required!");
+  }
+
   //name validation
   const schema = joi.object({
     name: joi.string().min(1).required(),
