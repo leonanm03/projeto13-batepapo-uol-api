@@ -142,5 +142,26 @@ app.get("/messages", async (req, res) => {
   }
 });
 
+// Post status
+app.post("/status", async (req, res) => {
+  const user = req.headers.user;
+  const userExists = await collectionUsers.findOne({ name: user });
+
+  if (!userExists) {
+    return res.status(404).send("User not found!");
+  }
+
+  //Update user lastStatus
+  try {
+    await collectionUsers.updateOne(
+      { name: user },
+      { $set: { lastStatus: Date.now() } }
+    );
+    return res.status(200).send("Status updated!");
+  } catch {
+    return res.status(422).send("Error updating status!");
+  }
+});
+
 // start server
 app.listen(PORT, () => console.log(`Server running in PORT: ${PORT}`));
