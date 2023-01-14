@@ -1,9 +1,10 @@
 import express from "express";
-import { MongoClient, ObjectId } from "mongodb";
+import { MongoClient} from "mongodb";
 import dotenv from "dotenv";
 import cors from "cors";
 import joi from "joi";
 import dayjs from "dayjs";
+import utf8 from "utf8";
 
 const app = express();
 dotenv.config();
@@ -77,19 +78,20 @@ app.get("/participants", async (req, res) => {
 // Send message
 app.post("/messages", async (req, res) => {
   const { to, text, type } = req.body;
-  const from = req.headers.user;
+  let { user } = req.headers;
+  user = utf8.decode(user);
 
-  //block messages without user header
-  if (!from) return res.status(422).send("Missing user header!");
+  // block messages without user header
+  if (!user) return res.status(422).send("Missing user header!");
 
   // block messages without to, text or type
   if (!to || !text || !type) {
     return res.status(422).send("{to}, {text} and {type} are required!");
   }
 
-  const userExists = await collectionUsers.findOne({ name: from });
+  const userExists = await collectionUsers.findOne({ name: user });
   if (!userExists) {
-    return res.status(404).send("User not found!");
+    return res.status(422).send("User not found!");
   }
 
   //to, text, type, from validation
@@ -97,9 +99,9 @@ app.post("/messages", async (req, res) => {
     to: joi.string().min(1).required(),
     text: joi.string().min(1).required(),
     type: joi.string().valid("message", "private_message").required(),
-    from: joi.string().min(1).required(),
+    user: joi.string().min(1).required(),
   });
-  const { error } = schema.validate({ to, text, type });
+  const { error } = schema.validate({ to, text, type, user });
   if (error) {
     return res.status(422).send(error.details[0].message);
   }
@@ -109,7 +111,7 @@ app.post("/messages", async (req, res) => {
   //insert message in database
   try {
     await collectionMsgs.insertOne({
-      from,
+      from: user,
       to,
       text,
       type,
@@ -124,11 +126,16 @@ app.post("/messages", async (req, res) => {
 // Get messages
 app.get("/messages", async (req, res) => {
   let messages;
-  const user = req.headers.user;
-  let limit = parseInt(req.query.limit);
+  let { user } = req.headers;
+  user = utf8.decode(user);
+  let limit = 100;
 
-  if (!limit) {
-    limit = 100;
+  if (req.query.limit) {
+    limit = parseInt(req.query.limit);
+  }
+
+  if (limit < 1) {
+    return res.status(422).send("Invalid limit!");
   }
 
   //limit validation
@@ -157,7 +164,8 @@ app.get("/messages", async (req, res) => {
 
 // Post status
 app.post("/status", async (req, res) => {
-  const user = req.headers.user;
+  let { user } = req.headers;
+  user = utf8.decode(user);
   const userExists = await collectionUsers.findOne({ name: user });
 
   if (!userExists) {
