@@ -1,5 +1,5 @@
 import express from "express";
-import { MongoClient} from "mongodb";
+import { MongoClient } from "mongodb";
 import dotenv from "dotenv";
 import cors from "cors";
 import joi from "joi";
@@ -79,10 +79,11 @@ app.get("/participants", async (req, res) => {
 app.post("/messages", async (req, res) => {
   const { to, text, type } = req.body;
   let { user } = req.headers;
-  user = utf8.decode(user);
 
   // block messages without user header
   if (!user) return res.status(422).send("Missing user header!");
+
+  user = utf8.decode(user);
 
   // block messages without to, text or type
   if (!to || !text || !type) {
@@ -127,6 +128,9 @@ app.post("/messages", async (req, res) => {
 app.get("/messages", async (req, res) => {
   let messages;
   let { user } = req.headers;
+
+  if (!user) return res.status(422).send("Missing user header!");
+
   user = utf8.decode(user);
   let limit = 100;
 
@@ -134,7 +138,8 @@ app.get("/messages", async (req, res) => {
     limit = parseInt(req.query.limit);
   }
 
-  if (limit < 1) {
+  // block limit less than 1 and string
+  if (limit < 1 || isNaN(limit)) {
     return res.status(422).send("Invalid limit!");
   }
 
