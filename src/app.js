@@ -163,5 +163,33 @@ app.post("/status", async (req, res) => {
   }
 });
 
+// check status
+async function checkStatus() {
+  const users = await collectionUsers.find().toArray();
+  const time = Date.now();
+  const limit = 10000; //10 seconds
+  const timestamp = dayjs(time).format("HH:mm:ss");
+
+  users.forEach(async (user) => {
+    const lastStatus = user.lastStatus;
+    const name = user.name;
+
+    if (time - lastStatus > limit) {
+      //if user is inactive for more than 10 seconds
+      await collectionUsers.deleteOne({ name: name });
+      await collectionMsgs.insertOne({
+        from: name,
+        to: "Todos",
+        text: "sai da sala...",
+        type: "status",
+        time: timestamp,
+      });
+    }
+  });
+}
+
+// check status every 15 seconds
+setInterval(checkStatus, 15000);
+
 // start server
 app.listen(PORT, () => console.log(`Server running in PORT: ${PORT}`));
