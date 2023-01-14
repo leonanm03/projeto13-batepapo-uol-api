@@ -79,8 +79,10 @@ app.post("/messages", async (req, res) => {
   const { to, text, type } = req.body;
   const from = req.headers.user;
 
+  //block messages without user header
   if (!from) return res.status(422).send("Missing user header!");
 
+  // block messages without to, text or type
   if (!to || !text || !type) {
     return res.status(422).send("{to}, {text} and {type} are required!");
   }
@@ -90,11 +92,12 @@ app.post("/messages", async (req, res) => {
     return res.status(404).send("User not found!");
   }
 
-  //to, text, type validation
+  //to, text, type, from validation
   const schema = joi.object({
     to: joi.string().min(1).required(),
     text: joi.string().min(1).required(),
     type: joi.string().valid("message", "private_message").required(),
+    from: joi.string().min(1).required(),
   });
   const { error } = schema.validate({ to, text, type });
   if (error) {
